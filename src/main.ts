@@ -73,7 +73,7 @@ async function run() {
 	await mytable.create();
 
 	const test: IMyTable1[] = []
-	for (let i = 0; i < 100; i++) {
+	for (let i = 0; i < 10000; i++) {
 		test.push({ first_name: `first name ${i}`, last_name: `last name ${i}`, int_value: i, bool_value: i % 2 == 0 })
 	}
 	await mytable.insert(test);
