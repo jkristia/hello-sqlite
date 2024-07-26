@@ -1,6 +1,11 @@
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite'
 
+/*
+	https://sqldocs.org/sqlite/introduction/
+	https://www.npmjs.com/package/sqlite#getting-a-single-row
+	https://github.com/TryGhost/node-sqlite3/wiki/API
+*/
 export enum TableFieldType {
 	string = 'TEXT',
 	int = 'INTEGER',
@@ -13,7 +18,7 @@ export interface TableField {
 	isPrimaryKey?: boolean;
 }
 
-export class DBTable {
+export class DBTable<T> {
 	protected _fields: TableField[] = [];
 	constructor(protected _db: Database, protected _name: string) {
 	}
@@ -34,6 +39,11 @@ export class DBTable {
 		const sql = `CREATE TABLE IF NOT EXISTS ${this._name} ( ${fields.join(', ')} )`
 		await this._db.exec(sql);
 	}
+	public async getAll<T>(): Promise<T[] | null> {
+		const sql = await this._db.prepare(`SELECT * FROM ${this._name}`);
+		const r = await sql.all();
+		return r;
+	}
 }
 
 export interface IMyTable1 {
@@ -44,7 +54,7 @@ export interface IMyTable1 {
 	bool_value?: boolean;
 }
 
-export class DBMyTable1 extends DBTable {
+export class DBMyTable1 extends DBTable<IMyTable1> {
 	constructor(db: Database) {
 		super(db, 'my_table_1');
 		this._fields = [
@@ -57,10 +67,8 @@ export class DBMyTable1 extends DBTable {
 	}
 	public async insert(records: IMyTable1[]) {
 		this._db.run('BEGIN')
-		// const sql = await this._db.prepare(`INSERT INTO ${this._name} (id, first_name, last_name, int_value, bool_value) VALUES(? ? ? ? ?)`);
-		// records.forEach(async r => await sql.run([ null, r.first_name, r.last_name, r.int_value, r.bool_value?.toString() ]))
-		const sql = await this._db.prepare(`INSERT INTO ${this._name} (first_name, last_name) VALUES(?, ?)`);
-		records.forEach(async r => await sql.run(r.first_name, r.last_name))
+		const sql = await this._db.prepare(`INSERT INTO ${this._name} (first_name, last_name, int_value, bool_value) VALUES(?, ?, ?, ?)`);
+		records.forEach(async r => await sql.run(r.first_name, r.last_name, r.int_value, r.bool_value?.toString()))
 		this._db.run('COMMIT')
 	}
 }
@@ -68,15 +76,16 @@ export class DBMyTable1 extends DBTable {
 
 async function run() {
 	console.log('open');
-	const db = await open({ filename: 'mydbtest.db', driver: sqlite3.Database });
+	const db = await open({ filename: './data/db1.db', driver: sqlite3.Database });
 	const mytable = new DBMyTable1(db);
 	await mytable.create();
 
 	const test: IMyTable1[] = []
-	for (let i = 0; i < 10000; i++) {
+	for (let i = 0; i < 20; i++) {
 		test.push({ first_name: `first name ${i}`, last_name: `last name ${i}`, int_value: i, bool_value: i % 2 == 0 })
 	}
 	await mytable.insert(test);
+	await mytable.getAll();
 }
 
 run();
