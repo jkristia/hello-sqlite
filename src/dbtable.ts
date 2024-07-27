@@ -40,6 +40,9 @@ export class DBTable<TData extends object, TFieldEnum> {
 		const sql = `CREATE TABLE IF NOT EXISTS ${this._name} ( ${fields.join(', ')} )`
 		await this._db.exec(sql);
 	}
+	public async describe(): Promise<{ name: string, type: TableFieldType }[]> {
+		return await this._db.all(`pragma table_info(${this._name})`)
+	}
 	public async getAll<TData>(fields?: TFieldEnum[]): Promise<TData[] | null> {
 		const fieldNames = fields ? fields.join(', ') : '*';
 		const sql = await this._db.prepare(`SELECT ${fieldNames} FROM ${this._name}`);
@@ -47,13 +50,13 @@ export class DBTable<TData extends object, TFieldEnum> {
 		return r;
 	}
 	public async insert(records: TData[], fields?: TFieldEnum[]) {
-		
+
 		let fieldsToInsert: TableField<TFieldEnum>[] = [];
 		if (!fields) {
 			fieldsToInsert = [...this._fields]
 		}
-		fields?.forEach( fieldType => {
-			const field = this._fields.find( field => field.name === fieldType ) 
+		fields?.forEach(fieldType => {
+			const field = this._fields.find(field => field.name === fieldType)
 			if (field) {
 				fieldsToInsert.push(field)
 			}
@@ -64,7 +67,7 @@ export class DBTable<TData extends object, TFieldEnum> {
 		const sqlStatement = await this._db.prepare(queryString);
 		records.forEach(async (r: any) => {
 			const values: any[] = [];
-			fieldsToInsert.forEach( f => values.push(r[f.name]))
+			fieldsToInsert.forEach(f => values.push(r[f.name]))
 			await sqlStatement.run(values)
 		})
 		await sqlStatement.finalize();
