@@ -16,7 +16,7 @@ async function run() {
 	await mytable.insert(test);
 	let r = await mytable.getAll();
 	console.log('got ', r?.length)
-	r = await mytable.getAll([ MyTableField.id, MyTableField.last_name]);
+	// r = await mytable.getAll([ MyTableField.id, MyTableField.last_name]);
 	// console.log(r)
 }
 

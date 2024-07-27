@@ -3,6 +3,7 @@ import { Database } from 'sqlite'
 
 /*
 	https://sqldocs.org/sqlite/introduction/
+	https://sqldocs.org/sqlite/sqlite-nodejs/
 	https://www.npmjs.com/package/sqlite#getting-a-single-row
 	https://github.com/TryGhost/node-sqlite3/wiki/API
 */
@@ -60,35 +61,12 @@ export class DBTable<TData extends object, TFieldEnum> {
 		const fieldNames = fieldsToInsert.map(f => f.name).join(', ');
 		const valuesString = fieldsToInsert.map(f => '?').join(', ');
 		const queryString = `INSERT INTO ${this._name} (${fieldNames}) VALUES(${valuesString})`
-		console.log('queryString', queryString)
-		await this._db.run('BEGIN');
+		const sqlStatement = await this._db.prepare(queryString);
 		records.forEach(async (r: any) => {
 			const values: any[] = [];
 			fieldsToInsert.forEach( f => values.push(r[f.name]))
-			const sql = await this._db.prepare(queryString);
-			await sql.run(values)
+			await sqlStatement.run(values)
 		})
-		await this._db.run('COMMIT')
-		// const tableName = 'my_table';
-
-		// let records: any[] = [];
-		// for (let i = 0; i < 20; i++) {
-		// 	records.push({ first_name: 'a', last_name: 'b'})
-		// }
-		// console.log('insert', records.length)
-		// await this._db.run('BEGIN')
-		// records.forEach(async (r: any) => {
-		// 	const statement = await this._db.prepare(`INSERT INTO ${tableName} (first_name, last_name) VALUES(?, ?)`);
-		// 	await statement.run(r.first_name, r.last_name)
-		// });
-		// await this._db.run('COMMIT')
-
-		// const statement = await this._db.prepare(`SELECT * FROM ${tableName}`);
-		// let r = await statement.all();
-		// console.log('got', r.length)
-		// setTimeout( async () => {
-		// 	let r = await statement.all();
-		// 	console.log('got', r.length)
-		// }, 100);
+		await sqlStatement.finalize();
 	}
 }
