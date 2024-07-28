@@ -19,7 +19,7 @@ export interface TableField<TFieldEnum> {
 	isPrimaryKey?: boolean;
 }
 
-export class DBTable<TData extends object, TFieldEnum> {
+export abstract class DBTable<TData extends object, TFieldEnum> {
 	protected _fields: TableField<TFieldEnum>[] = [];
 	constructor(protected _db: Database, protected _name: string) {
 	}
@@ -72,4 +72,5 @@ export class DBTable<TData extends object, TFieldEnum> {
 		})
 		await sqlStatement.finalize();
 	}
+	public abstract migrate(toVersion: number): Promise<void>;
 }

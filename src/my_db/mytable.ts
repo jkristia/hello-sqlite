@@ -1,5 +1,5 @@
 import { Database } from 'sqlite'
-import { DBTable, TableFieldType } from "./dbtable";
+import { DBTable, TableFieldType } from "../dbtable";
 
 export enum MyTableField {
 	id = 'id',
@@ -27,4 +27,7 @@ export class DBMyTable extends DBTable<MyTableData, MyTableField> {
 			{ name: MyTableField.bool_value, type: TableFieldType.bool },
 		]
 	}
+	public async migrate(toVersion: number): Promise<void> {
+	}
+
 }
