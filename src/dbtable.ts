@@ -73,4 +73,15 @@ export abstract class DBTable<TData extends object, TFieldEnum> {
 		await sqlStatement.finalize();
 	}
 	public abstract migrate(toVersion: number): Promise<void>;
+
+	protected async addColumnsToTable(columns: TableField<TFieldEnum>[]) {
+		const info = await this.describe();
+		for (const column of columns) {
+			const exist = info.find( i => i.name === column.name);
+			if (exist) {
+				continue;
+			}
+			await this._db.exec(`alter table ${this._name} add column ${column.name} ${column.type}`);
+		}
+	}
 }

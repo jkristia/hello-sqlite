@@ -14,7 +14,7 @@ export abstract class DBTables {
 	public async migrate(): Promise<void> {
 		this._db.run('BEGIN TRANSACTION')
 		let version = await this.getVersion();
-		while (version < this._dbVersion) {
+		while (version <= this._dbVersion) {
 			this._tables.forEach( table => table.migrate(version))
 			version++;
 		}
